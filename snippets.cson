@@ -1,0 +1,80 @@
+# Your snippets
+#
+# Atom snippets allow you to enter a simple prefix in the editor and hit tab to
+# expand the prefix into a larger code block with templated values.
+#
+# You can create a new snippet in this file by typing "snip" and then hitting
+# tab.
+#
+# An example CoffeeScript snippet to expand log to console.log:
+#
+# '.source.coffee':
+#   'Console log':
+#     'prefix': 'log'
+#     'body': 'console.log $1'
+#
+# Each scope (e.g. '.source.coffee' above) can only be declared once.
+#
+# This file uses CoffeeScript Object Notation (CSON).
+# If you are unfamiliar with CSON, you can read more about it in the
+# Atom Flight Manual:
+# http://flight-manual.atom.io/using-atom/sections/basic-customization/#_cson
+
+'.source.js':
+  'Phaser new game':
+    'prefix': 'pgame'
+    'body': 'var game = new Phaser.Game($1, $2, Phaser.AUTO, "$3");'
+  'Phaser State Template':
+    'prefix': 'pstatetemplate'
+    'body': """
+    var ${1:ActualName} = {
+      //State variables here.
+
+      preload: function() {
+
+      },
+      create:function() {
+
+
+      },
+      update:function() {
+
+      }
+    };
+    """
+  'Phaser State Create':
+    'prefix': 'pstatecreate'
+    'body': 'game.state.add("${1:name}", ${2:ActualName});'
+  'Phaser Text Style':
+    'prefix': 'ptextstyle'
+    'body': 'var $1 = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };'
+  'Phaser Text Object':
+    'prefix': 'ptextobj'
+    'body': 'var ${1:name} = game.add.text(${2:x}, ${3:y}, "${4:text}", ${5:style});'
+  'Phaser Load Image':
+    'prefix': 'ploadimage'
+    'body': 'game.load.image("${1:name}", "${2:location}");'
+  'Phaser Load Spritesheet':
+    'prefix': 'ploadspritesheet'
+    'body': 'game.load.spritesheet("${1:name}", "${2:location}", ${3:width}, ${4:height}, ${5:count});'
+  'Phaser Add Sprite':
+    'prefix': 'paddsprite'
+    'body': 'var ${1:varName} = game.add.sprite(${2:x}, ${3:y}, "${4:assetName}");'
+  'Enable Arcade Physics on sprite':
+    'prefix': 'parcadephysics'
+    'body': '    game.physics.enable(${1:spriteName}, Phaser.Physics.ARCADE);'
+  'Phaser Random Integer':
+    'prefix': 'prandint'
+    'body': 'game.rnd.integerInRange($1,$2)'
+  'Phaser Button':
+    'prefix': 'pbutton'
+    'body': 'var ${1:button} = game.make.button(${2:game.world.centerX }, ${3:game.world.centerY }, \'${3:text}\', removeGroup, this, 2, 1, 0);'
+  'Phaser Atlas':
+    'prefix': 'ploadatlas'
+    'body': "game.load.atlas('${1:name}', '${2:image}', '${3:atlasJSON}'); "
+  'Phaser Load Tilemap':
+    'prefix': 'ploadtilemap'
+    'body': "  game.load.tilemap('${1:name}', '${2:jsonFile.json}', null, Phaser.Tilemap.TILED_JSON); "
+  'Phaser Tilemap':
+    'prefix': 'paddtilemap'
+    'body': "var ${1:map} = game.add.tilemap('${2:mapName}');"
