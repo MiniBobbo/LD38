@@ -1,0 +1,76 @@
+{"frames": [
+
+{
+	"filename": "dialog_frame",
+	"frame": {"x":231,"y":0,"w":674,"h":127},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":0,"w":674,"h":127},
+	"sourceSize": {"w":675,"h":128}
+},
+{
+	"filename": "module",
+	"frame": {"x":0,"y":0,"w":231,"h":220},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":11,"y":30,"w":231,"h":220},
+	"sourceSize": {"w":250,"h":250}
+},
+{
+	"filename": "ow_empty",
+	"frame": {"x":478,"y":127,"w":100,"h":100},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":100,"h":100},
+	"sourceSize": {"w":100,"h":100}
+},
+{
+	"filename": "ow_module",
+	"frame": {"x":578,"y":127,"w":85,"h":80},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":9,"y":10,"w":85,"h":80},
+	"sourceSize": {"w":100,"h":100}
+},
+{
+	"filename": "player_2",
+	"frame": {"x":663,"y":127,"w":43,"h":62},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":2,"w":43,"h":62},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "player_stand",
+	"frame": {"x":663,"y":127,"w":43,"h":62},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":2,"w":43,"h":62},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "portrait_default",
+	"frame": {"x":359,"y":127,"w":119,"h":117},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":11,"w":119,"h":117},
+	"sourceSize": {"w":128,"h":128}
+},
+{
+	"filename": "portrait_frame",
+	"frame": {"x":231,"y":127,"w":128,"h":128},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":128,"h":128},
+	"sourceSize": {"w":128,"h":128}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "atlas.png",
+	"format": "RGBA8888",
+	"size": {"w":905,"h":255},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:62b9d4b4113d8830036fab69d4c755b8:398c212aa12c19054156135412953e3f:cbce6b53f0f49e0bf15173c25c41f876$"
+}
+}

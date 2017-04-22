@@ -2,11 +2,12 @@ var PreloadState = {
   //State variables here.
 
   preload: function() {
-//    game.load.atlas('name', 'image', 'atlasJSON');
+    game.load.atlas('atlas', 'assets/atlas.png', 'assets/atlas.json');
+    game.load.atlas('bgs', 'assets/bgs.png', 'assets/bgs.json');
   },
   create:function() {
-    var style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
-    var text = game.add.text(0,0, "Preload", style);
+    game.state.start('OverworldState');
+    GS.init();
   },
   update:function() {
 
