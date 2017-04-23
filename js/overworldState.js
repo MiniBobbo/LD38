@@ -6,19 +6,52 @@ var OverworldState = {
   upKey:null,
   downKey:null,
   spaceKey:null,
+  startTime:null,
+  goalText:null,
 
   preload: function() {
 
   },
   create:function() {
+    //Gets the current time so we can ignore the initial keypresses.
+    this.startTime = game.time.now;
+
+    game.camera.flash(0x000000,500);
+
     var tiles = game.add.group();
     //Create the tiles.
     for(i=0; i < GS.maxTiles; i++) {
       for(j = 0; j < GS.maxTiles; j++) {
-        var t = GS.overworld[i][j]
+        var t = game.add.sprite(0, 0, "atlas");
+        t.stats = GS.overworld[i][j];
         t.x = 100*i;
         t.y = 100*j;
         tiles.add(t);
+        t.animations.add('empty',['ow_empty']);
+        t.animations.add('module',['ow_module']);
+        t.animations.add('unexplored',['ow_unexplored']);
+        t.animations.add('solarspot',['ow_solarspot']);
+        t.animations.add('solar',['ow_solar']);
+
+        if(!t.stats.explored) {
+          t.animations.play('unexplored');
+        } else {
+          switch (t.stats.type) {
+            case 'solar':
+            // debugger;
+              if(t.stats.equip=='none') {
+                t.animations.play('solarspot');
+              } else {
+                t.animations.play('solar');
+              }
+
+              break;
+            default:
+            t.animations.play(t.stats.type);
+
+          }
+        }
+
       }
     }
     //Add the player.
@@ -46,15 +79,26 @@ var OverworldState = {
     this.upKey.onDown.add(this.movePlayer);
     this.downKey.onDown.add(this.movePlayer);
 
+    this.createHud();
 
   },
   update:function() {
   },
   movePlayerSprite:function() {
     // debugger;
-    game.add.tween(this.player).to({x:  GS.playerLoc.x * 100 + 18, y: GS.playerLoc.y * 100 + 18}, 1, Phaser.Easing.Bounce.Out, true);
+    // game.add.tween(this.dialogBoxes).to( { alpha: 1 }, );
+    game.add.tween(this.player).to({x: GS.playerLoc.x * 100 + 18, y: GS.playerLoc.y * 100 + 18}, 500, Phaser.Easing.Quadratic.InOut, true).onComplete.add(OverworldState.exploreZone);
+    },
+  exploreZone:function() {
+    if(!GS.overworld[GS.playerLoc.x][GS.playerLoc.y].explored) {
+      GS.overworld[GS.playerLoc.x][GS.playerLoc.y].explored = true;
+      OverworldState.enterZone();
+    }
   },
   movePlayer:function(dir) {
+    if(game.time.now - OverworldState.startTime < 5) {
+      return;
+    }
     switch (dir.name) {
       case 'left':
       if(GS.playerLoc.x > 0) {
@@ -84,7 +128,21 @@ var OverworldState = {
     // debugger;
     //Set the current zone, then change the state to the PlayState which has the specific zines that we need to explore.
     GS.currentZone = GS.overworld[GS.playerLoc.x][GS.playerLoc.y];
-    game.state.start('PlayState');
+    game.camera.fade(0x000000, 500);
+    game.camera.onFadeComplete.add(function() {game.state.start('PlayState'); },this);
+
+
+  },
+  createHud:function() {
+    var style = { font: "bold 16px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle", wordWrap:true, wordWrapWidth:160 };
+    this.goalText = game.add.text(620, 30, "", style);
+    // this.goalText.maxWidth = 160;
+    for(i=0;i < GS.goals.length; i++) {
+      var thisGoal = GS.goals[i];
+      if(thisGoal.show && !thisGoal.completed) {
+        this.goalText.text += thisGoal.name + '\n';
+      }
+    }
 
   }
 };
