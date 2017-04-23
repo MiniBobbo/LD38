@@ -13,6 +13,11 @@ var PlayState = {
   dialogText:null,
   dialogTimer:null,
   debug:true,
+  speakQueue:[],
+  speakCurrent:false,
+  speakFinishTime:null,
+  speakTransition:false,
+  debugKey:null,
   //This is an interacting flag.
   int:false,
   preload: function() {
@@ -24,11 +29,16 @@ var PlayState = {
     var style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
     var text = game.add.text(0,0, "Play in zone:" + GS.currentZone.type, style);
     this.bg = game.add.sprite(0, 0, "bgs");
-    this.bg.animations.add('default', ['bg_2']);
-    this.bg.animations.play('default');
+    // this.bg.animations.add('default', ['bg_empty']);
+    // this.bg.animations.play('default');
+    this.bg.frameName = GS.currentZone.frameName;
     this.things = game.add.group();
     this.pickups = game.add.group();
 
+    //Allow us to debug with the P key if debug is true
+    if(this.debug) {
+        this.debugKey = game.input.keyboard.addKey(Phaser.Keyboard.P);
+    }
 
     //Create the HUD
     this.createHud();
@@ -45,6 +55,26 @@ var PlayState = {
 
   },
   update:function() {
+    if(this.speakCurrent) {
+      if(game.time.now > this.speakFinishTime && !this.speakTransition) {
+        this.speakTransition = true;
+        game.add.tween(this.dialogBoxes).to( { alpha: 0 }, 300, Phaser.Easing.Linear.None, true).onComplete.add(function() {
+          PlayState.speakTransition = false;
+          PlayState.speakCurrent = false;
+          PlayState.speakQueue.shift();
+          PlayState.movementEnabled = true;
+
+        });
+      }
+    }
+    else if(this.speakQueue.length > 0) {
+      this.displayDialog(this.speakQueue[0]);
+    }
+
+    if (this.debugKey.isDown)
+    {
+        debugger;
+    }
     this.player.body.velocity.x = 0;
     if(this.movementEnabled && this.leftKey.isDown) {
       this.player.body.velocity.x = -GS.playerSpeed;
@@ -91,6 +121,10 @@ var PlayState = {
 },
   interact:function() {
     // debugger;
+    if(PlayState.movementEnabled == false) {
+      return;
+    }
+
     PlayState.int = false;
     game.physics.arcade.overlap(PlayState.player, PlayState.pickups, PlayState.interactPickup);
     if(!PlayState.int) {
@@ -106,14 +140,31 @@ var PlayState = {
     PlayState.int = true;
     switch (thing.name) {
       case 'module':
-      PlayState.playerTalk('I can refill my air, energy and food at the module.', 'default', true);
+      if(!GS.modulePowered) {
+
+        PlayState.playerTalk('I used up the last of the landing module\'s power to avoid crashing.', 'default', false);
+        PlayState.playerTalk('Let\'s try the radio.', 'default', false);
+        PlayState.playerTalk('*HISS*', 'static', false);
+        PlayState.playerTalk('I need to find where the solar panels went and get them set up so I can get the batteries charged.', 'default', false);
+      }
+      else if(GS.modulePowered && !GS.sensorsPowered) {
+        PlayState.playerTalk('Now that I\'ve restored power to the landing module I can refill my air tanks here.', 'default', true);
+        PlayState.playerTalk('I don\'t have enough power to turn on the communications array yet.  I need a second solar array.', 'default', true);
+      } else if(GS.sensorsPowered && !GS.signalDiscovered) {
+        PlayState.playerTalk('Ok, the communication array should be running now.', 'default', true);
+
+      }
 
 
         break;
         case 'solar':
         // debugger;
-        if(GS.currentZone.equip != 'none') {
-          PlayState.playerTalk('The solar panel I set up here should be providing power to the landing module.', 'default', true);
+        if(GS.currentZone.equip != false) {
+          if(GS.modulePowered && !GS.sensorsPowered) {
+            PlayState.playerTalk('The solar panel I set up here should be providing power to the landing module.', 'default', true);
+          } else {
+            PlayState.playerTalk('Now that I have two solar panels set up there should be enough energy to run the communication array.', 'default', false);
+          }
 
         }
         else if(GS.heldItem == null || GS.heldItem.name != 'power array') {
@@ -121,11 +172,40 @@ var PlayState = {
 
         } else {
           // debugger;
-          GS.currentZone.equip = 'solar';
+          GS.currentZone.equip = true;
           GS.heldItem = null;
+          if(!GS.modulePowered) {
+            GS.modulePowered = true;
+          } else {
+            GS.sensorsPowered = true;
+          }
           game.state.start('PlayState');
         }
+          break;
+        case 'sensor':
+        if(!GS.signalDiscovered) {
+          PlayState.playerTalk('Just a large flat rock.', 'default', true);
+        }
+        else if(GS.currentZone.equip) {
+          if(!GS.sensor2placed) {
+            PlayState.playerTalk('One sensor down, one to go.', 'default', true);
+          } else {
+            PlayState.playerTalk('I should be able to triangulate the source of the interference from the landing module.', 'default', true);
+          }
 
+        } else if(!GS.currentZone.equip  && GS.checkItem('sensor')) {
+          GS.currentZone.equip = true;
+          GS.heldItem = null;
+          if(!GS.sensor1placed) {
+            GS.sensor1placed = true;
+          } else {
+            GS.sensor2placed = true;
+          }
+          game.state.start('PlayState');
+        } else if(GS.signalDiscovered && !GS.checkItem('sensor')) {
+          PlayState.playerTalk('This would be a great place to put a sensor package if I can find one.', 'default', true);
+
+        }
 
           break;
       default:
@@ -141,41 +221,55 @@ var PlayState = {
     PlayState.int = true;
     // debugger;
     if(GS.heldItem != null) {
-      PlayState.playerTalk('I\'m already carrying something.  I\'ll have to put it down first.', 'default', false);
+      PlayState.playerTalk('I\'m already carrying something.  I\'ll have to put it down first if I want to pick this up.', 'default', false);
       return;
     } else {
+      // debugger;
+      switch (pickup.stats.name) {
+        case 'power array':
+          PlayState.playerTalk('This is one of the power arrays that fell from the landing module.', 'default', false);
+          PlayState.playerTalk('I will have to find a good place to set it.', 'default', false);
+          break;
+        case 'sensor':
+        PlayState.playerTalk('This is a redundant sensor array that can send or receive signals.', 'default', true);
+        if(!GS.signalDiscovered) {
+          PlayState.playerTalk('I don\'t really need this one.  I have a much more powerful sensor array on the landing module.', 'default', true);
+          PlayState.playerTalk('I guess it can\'t hurt to take it with me.', 'default', true);
 
-      PlayState.playerTalk('Who knows when I will need this ' + pickup.stats.name, 'default', false);
+        } else {
+          PlayState.playerTalk('I will need this to triangulate the source of the interference.', 'default', true);
+          PlayState.playerTalk('It will need to go somewhere clear and elevated.', 'default', true);
+
+
+        }
+
+          break;
+        default:
+
+      }
       PlayState.pickupItem(pickup);
     }
   },
   playerTalk:function(message, emot, interrupt) {
-    this.dialogText.text = message;
-    switch (emot) {
-      case 'test':
+    this.speakQueue.push({message:message, emot:emot, interrupt:interrupt});
 
-        break;
-      default:
-        this.portrait.frameName = 'portrait_default';
-    }
+  },
+  displayDialog:function(speak) {
+    this.dialogText.text = speak.message;
+    this.portrait.animations.play(speak.emot);
+    // switch (speak.emot) {
+    //   case 'test':
+    //
+    //     break;
+    //   default:
+    //     this.portrait.frameName = 'portrait_default';
+    // }
     this.dialogBoxes.alpha = 0;
     // game.add.tween(this.dialogBoxes).to({alpha:1}, 1);
     game.add.tween(this.dialogBoxes).to( { alpha: 1 }, 500, Phaser.Easing.Linear.None, true);
-    // this.dialogBoxes.alpha = 1;
-
-    //If there is a dialog timer stop it because we are about to start another one.
-    if(this.dialogTimer!= null) {
-
-      this.dialogTimer.timer.stop();
-      this.dialogTimer.timer.start();
-
-    } else {
-      this.dialogTimer = game.time.events.add(4000, function() {game.add.tween(this.dialogBoxes).to( { alpha: 0 }, 500, Phaser.Easing.Linear.None, true);}, this);
-
-    }
-
-
-
+    this.speakCurrent = true;
+    this.speakFinishTime = game.time.now + 3000;
+    this.movementEnabled = speak.interrupt;
   },
   createHud:function() {
     //Create dialog box stuff.
@@ -188,9 +282,12 @@ var PlayState = {
     dialog_frame.frameName = 'dialog_frame';
     this.dialogBoxes.add(dialog_frame);
     this.dialogBoxes.y = 465;
+    this.portrait.animations.add('static', Phaser.Animation.generateFrameNames('portrait_static', 1, 4), 30, true);
+    this.portrait.animations.add('default', ['portrait_default']);
+
     this.portrait.frameName = 'portrait_default';
     this.dialogBoxes.add(this.portrait);
-    var small = { font: "bold 16px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+    var small = { font: "bold 26px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle", wordWrap:true, wordWrapWidth: 630};
     this.dialogText = game.make.text(135, 5, "Wow, the moon or whatever is really something",small);
     this.dialogBoxes.add(this.dialogText);
     this.dialogBoxes.alpha = 0;
@@ -274,6 +371,24 @@ var PlayState = {
         }
 
           break;
+        case 'sensor':
+        if(!GS.currentZone.equip) {
+          var sensorspot = game.make.sprite(300, 150, "atlas");
+          sensorspot.frameName = 'sensorspot';
+          sensorspot.name = 'sensor';
+              game.physics.enable(sensorspot, Phaser.Physics.ARCADE);
+          this.things.add(sensorspot);
+        } else {
+          var sensorspot = game.make.sprite(300, 150, "atlas");
+          sensorspot.animations.add('sensor', Phaser.Animation.generateFrameNames('sensor', 1, 7), 20, true);
+          sensorspot.animations.play('sensor');
+          sensorspot.name = 'sensor';
+              game.physics.enable(sensorspot, Phaser.Physics.ARCADE);
+          this.things.add(sensorspot);
+        }
+
+
+        break;
       default:
 
     }

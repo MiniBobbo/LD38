@@ -32,6 +32,9 @@ var OverworldState = {
         t.animations.add('unexplored',['ow_unexplored']);
         t.animations.add('solarspot',['ow_solarspot']);
         t.animations.add('solar',['ow_solar']);
+        t.animations.add('sensorspot', ['ow_sensorspot']);
+        t.animations.add('sensor', ['ow_sensor']);
+
 
         if(!t.stats.explored) {
           t.animations.play('unexplored');
@@ -44,6 +47,14 @@ var OverworldState = {
               } else {
                 t.animations.play('solar');
               }
+
+              break;
+            case 'sensor':
+            if(!t.stats.equip) {
+              t.animations.play('sensorspot');
+            } else {
+              t.animations.play('sensor');
+            }
 
               break;
             default:

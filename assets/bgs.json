@@ -39,6 +39,38 @@
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":600},
 	"sourceSize": {"w":800,"h":600}
+},
+{
+	"filename": "bg_empty1",
+	"frame": {"x":800,"y":0,"w":800,"h":600},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":600},
+	"sourceSize": {"w":800,"h":600}
+},
+{
+	"filename": "bg_empty2",
+	"frame": {"x":0,"y":600,"w":800,"h":600},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":600},
+	"sourceSize": {"w":800,"h":600}
+},
+{
+	"filename": "bg_empty3",
+	"frame": {"x":800,"y":600,"w":800,"h":600},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":600},
+	"sourceSize": {"w":800,"h":600}
+},
+{
+	"filename": "bg_rocks",
+	"frame": {"x":0,"y":1200,"w":800,"h":600},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":600},
+	"sourceSize": {"w":800,"h":600}
 }],
 "meta": {
 	"app": "http://www.codeandweb.com/texturepacker",
@@ -47,6 +79,6 @@
 	"format": "RGBA8888",
 	"size": {"w":1600,"h":1800},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:c67926597c03ffdba5fc354dbd9b3bc0:e7fa1134cc74b8eae83628bdb16e6e0a:8d66618cd132f1e192b33c10ea222e7a$"
+	"smartupdate": "$TexturePacker:SmartUpdate:c65862cf4ce14f6c924cfc931b8888ce:ed179bbe6adcd251b05db4405020646a:8d66618cd132f1e192b33c10ea222e7a$"
 }
 }

@@ -27,7 +27,7 @@ of a strange signal (which is an alien ship) and fly away.
 
 ### Needs:
 - Player sprite
-- Working energy, air, and food levels
+- Working air levels
 - Overworld map
 - Location map
 
