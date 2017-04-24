@@ -1,5 +1,8 @@
 var PlayState = {
   //State variables here.
+  dead:false,
+  runOnce:true,
+  elapsed:0,
   bg:null,
   things:null,
   pickups:null,
@@ -12,7 +15,7 @@ var PlayState = {
   dialogBoxes:null,
   dialogText:null,
   dialogTimer:null,
-  debug:true,
+  debug:false,
   speakQueue:[],
   speakCurrent:false,
   speakFinishTime:null,
@@ -20,6 +23,8 @@ var PlayState = {
   debugKey:null,
   //This is an interacting flag.
   int:false,
+  lastTime:null,
+  timer:null,
   preload: function() {
 
   },
@@ -55,6 +60,38 @@ var PlayState = {
 
   },
   update:function() {
+    if (this.debug && this.debugKey.isDown)
+    {
+        debugger;
+        // this.player.animations.play('dead');
+    }
+    if(this.dead) {
+      return;
+    }
+
+    if(GS.currentZone.type == 'signal' && GS.currentZone.equip) {
+      this.timer.start();
+    }
+
+    var dt = game.time.now - this.lastTime;
+    this.lastTime = game.time.now;
+
+    //We lose air at 1 every second.
+    if(dt < 1000 && this.movementEnabled){
+      this.elapsed += dt;
+    }
+    if(this.elapsed > 1000) {
+      GS.air--;
+      this.elapsed -= 1000;
+      if(GS.air == 50) {
+        this.playerTalk('Running low on air...', 'default', true);
+      } else if (GS.air <= 0) {
+        this.playerDies();
+      }
+    }
+
+    this.air.text = 'Air: ' + Math.floor(GS.air);
+
     if(this.speakCurrent) {
       if(game.time.now > this.speakFinishTime && !this.speakTransition) {
         this.speakTransition = true;
@@ -71,10 +108,6 @@ var PlayState = {
       this.displayDialog(this.speakQueue[0]);
     }
 
-    if (this.debugKey.isDown)
-    {
-        debugger;
-    }
     this.player.body.velocity.x = 0;
     if(this.movementEnabled && this.leftKey.isDown) {
       this.player.body.velocity.x = -GS.playerSpeed;
@@ -93,6 +126,7 @@ var PlayState = {
   addPlayer:function() {
     this.player = game.add.sprite(100, 360, "atlas");
     this.player.animations.add('stand', ['player_stand']);
+    this.player.animations.add('dead', Phaser.Animation.generateFrameNames('player_dead', 1, 3), 3, false);
     this.player.animations.play('stand');
     game.physics.enable(this.player, Phaser.Physics.ARCADE);
     this.player.checkWorldBounds = true;
@@ -100,6 +134,7 @@ var PlayState = {
 
   },
   playerOut:function() {
+    this.speakQueue.length = 0;
     game.camera.fade(0x000000, 500);
     game.camera.onFadeComplete.add(function() {game.state.start('OverworldState'); },this);
 
@@ -141,20 +176,42 @@ var PlayState = {
     switch (thing.name) {
       case 'module':
       if(!GS.modulePowered) {
+        if(this.runOnce) {
+          PlayState.playerTalk('I used up the last of the landing module\'s power to avoid crashing.', 'default', false);
+          PlayState.playerTalk('Let\'s try the radio.', 'default', false);
+          PlayState.playerTalk('*HISS*', 'static', false);
+          PlayState.playerTalk('I need to find where the solar panels went and get them set up so I can get the batteries charged.', 'default', false);
+          this.runOnce = false;
+        }
+        PlayState.playerTalk('The air scrubbers aren\'t very effective without the solar panels set up.', 'default', false);
 
-        PlayState.playerTalk('I used up the last of the landing module\'s power to avoid crashing.', 'default', false);
-        PlayState.playerTalk('Let\'s try the radio.', 'default', false);
-        PlayState.playerTalk('*HISS*', 'static', false);
-        PlayState.playerTalk('I need to find where the solar panels went and get them set up so I can get the batteries charged.', 'default', false);
       }
       else if(GS.modulePowered && !GS.sensorsPowered) {
         PlayState.playerTalk('Now that I\'ve restored power to the landing module I can refill my air tanks here.', 'default', true);
         PlayState.playerTalk('I don\'t have enough power to turn on the communications array yet.  I need a second solar array.', 'default', true);
       } else if(GS.sensorsPowered && !GS.signalDiscovered) {
-        PlayState.playerTalk('Ok, the communication array should be running now.', 'default', true);
+        PlayState.playerTalk('Ok, the communication array should be running now.', 'default',false );
+        PlayState.playerTalk('*HISS* *POP* *CRACKLE*.', 'static', false);
+        PlayState.playerTalk('The equipment is working, what could be wrong?', 'default',false );
+        PlayState.playerTalk('I\'m getting the same interference that caused me to crash!  I wonder if I can locate it?', 'default',false );
+        PlayState.playerTalk('If I can set up the two other redundant sensor arrays I should be able to trianglulate the signal location.', 'default',false );
+        PlayState.playerTalk('I\'ve got to find them and a couple spots to put them.', 'default',false );
+        GS.signalDiscovered = true;
+      } else if (!GS.sensor1placed && GS.signalDiscovered) {
+        PlayState.playerTalk('I need to find and place two sensors to triangulate the location of the interference.', 'default',false );
+      } else if (!GS.sensor2placed && GS.sensor1placed) {
+        PlayState.playerTalk('I placed one of the sensors.  Time to place the second.', 'default',true );
+      }  else if (GS.sensor2placed && !GS.signalTriangulated) {
+        PlayState.playerTalk('Ok, let me try to find where the interference is coming from...', 'default',false );
+        PlayState.playerTalk('*HISS* *POP* *CRACKLE*.', 'static', false);
+        PlayState.playerTalk('Excellent.  I placed the location on my map.', 'default',false );
+        GS.signalTriangulated = true;
+        GS.overworld[1][2].equip = true;
+      }  else if (GS.signalTriangulated) {
+        PlayState.playerTalk('Better prepare for the trek to the source of the interference.', 'default',false );
 
       }
-
+      GS.changeAirLevel(GS.maxAir);
 
         break;
         case 'solar':
@@ -171,11 +228,12 @@ var PlayState = {
           PlayState.playerTalk('This looks like a good spot for solar.', 'default', true);
 
         } else {
-          // debugger;
+          debugger;
           GS.currentZone.equip = true;
           GS.heldItem = null;
           if(!GS.modulePowered) {
             GS.modulePowered = true;
+            GS.maxAir = 200;
           } else {
             GS.sensorsPowered = true;
           }
@@ -208,6 +266,12 @@ var PlayState = {
         }
 
           break;
+      case 'ship':
+        if(GS.currentZone.equip) {
+          game.state.start('VictoryState');
+        }
+
+        break;
       default:
       PlayState.playerTalk('Not sure what this thing is.', 'default', true);
 
@@ -227,8 +291,8 @@ var PlayState = {
       // debugger;
       switch (pickup.stats.name) {
         case 'power array':
-          PlayState.playerTalk('This is one of the power arrays that fell from the landing module.', 'default', false);
-          PlayState.playerTalk('I will have to find a good place to set it.', 'default', false);
+          PlayState.playerTalk('This is one of the power arrays that fell from the landing module.', 'default', true);
+          PlayState.playerTalk('I will have to find a good place to set it.', 'default', true);
           break;
         case 'sensor':
         PlayState.playerTalk('This is a redundant sensor array that can send or receive signals.', 'default', true);
@@ -296,8 +360,6 @@ var PlayState = {
     var style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
     //Add the indicators to the two left
     this.air = game.add.text(0, 0, "Air: " + GS.air, style);
-    this.air = game.add.text(0, 40, "Energy: " + GS.energy, style);
-    this.air = game.add.text(0, 80, "Food: " + GS.food, style);
 
   },
   createPickups:function() {
@@ -346,6 +408,26 @@ var PlayState = {
   },
   createType:function() {
     switch (GS.currentZone.type) {
+      case 'signal':
+      if(GS.currentZone.equip) {
+
+        var module = game.make.sprite(300, 150, "atlas");
+        module.frameName = 'ship';
+        module.name = 'ship';
+        game.physics.enable(module, Phaser.Physics.ARCADE);
+        this.things.add(module);
+        module.alpha =0;
+        this.timer = game.time.create(false);
+        this.timer.add(0, function() {
+          PlayState.movementEnabled = false;
+          this.playerTalk('Here is the source of the interference, but I don\'t see anything...', 'default', false);
+        }, this);
+
+        this.timer.add(5000, function() { game.add.tween(module).to( { alpha: 1 }, 500, Phaser.Easing.Linear.None, true);  } ,PlayState);
+        this.timer.add(6000, function() { this.playerTalk('What is that?', 'default', false);  } ,PlayState);
+
+      }
+        break;
       case 'module':
       var module = game.make.sprite(300, 150, "atlas");
       module.frameName = 'module';
@@ -356,7 +438,7 @@ var PlayState = {
         break;
         case 'solar':
         //If we haven't built a solar panel here yet, show the spot.
-        if(GS.currentZone.equip == 'none') {
+        if(!GS.currentZone.equip ) {
           var solarspot = game.make.sprite(300, 150, "atlas");
           solarspot.frameName = 'panelspot';
           solarspot.name = 'solar';
@@ -392,6 +474,16 @@ var PlayState = {
       default:
 
     }
+
+  },
+  playerDies:function() {
+    // debugger;
+    this.dead = true;
+    this.movementEnabled = false;
+    //The player dies.
+    game.camera.fade(0x000000, 1500);
+    game.camera.onFadeComplete.add(function() {game.state.start('LoseState'); },this);
+    this.player.animations.play('dead');
 
   }
 

@@ -6,6 +6,9 @@ game.state.add('Preload', PreloadState);
 game.state.add('MenuState', MenuState);
 game.state.add('PlayState',PlayState);
 game.state.add('OverworldState',OverworldState);
+game.state.add('LoseState',LoseState);
+game.state.add('VictoryState',VictoryState);
+
 
 
 game.state.start('Preload');
@@ -17,6 +20,7 @@ var GS = {
   goals:[],
   energy:100,
   air:100,
+  maxAir:100,
   food:100,
   maxTiles:6,
   playerLoc:new Phaser.Point(1,1),
@@ -29,7 +33,25 @@ var GS = {
   sensor1placed:false,
   sensor2placed:false,
   signalTriangulated:false,
+
   init:function() {
+    //Set all the defaults:
+    this.goals = [];
+    this.equipment = [];
+    this.goals = [];
+    this.air = 100;
+    this.maxAir = 100;
+    this.playerLoc = new Phaser.Point(1,1);
+    this.currentZone = new Phaser.Point(1,1);
+    this.heldItem = null;
+    this.modulePowered = false;
+    this.sensorsPowered=false;
+    this.signalDiscovered=false;
+    this.sensor1placed=false;
+    this.sensor2placed=false;
+    this.signalTriangulated=false;
+
+
     //Create the new equipment here
     var module = game.add.sprite(0, 0, "atlas");
     module.type = 'module';
@@ -55,6 +77,7 @@ var GS = {
 
     }
 
+
     //Create the goals
     this.goals.push({
       name:'- Find and deploy solar panels',
@@ -74,7 +97,7 @@ var GS = {
 
     //Debug, give the player an item.
     // this.giveItem('power array');
-    this.signalDiscovered = true;
+    // this.signalDiscovered = true;
 
     //Place the module
     var m = this.overworld[1][1];
@@ -89,8 +112,15 @@ var GS = {
     m.type = 'solar';
     m = this.overworld[0][0];
     m.type = 'sensor';
-    m = this.overworld[0][1];
+    m = this.overworld[0][3];
     m.type = 'sensor';
+    m = this.overworld[5][3];
+    m.type = 'signal';
+    // m.equip = true;
+    // this.signalTriangulated=true;
+
+
+
 
 
 
@@ -98,8 +128,8 @@ var GS = {
     // this.placePickup(1,0,'power array');
     this.placePickup(1,0,'power array');
     this.placePickup(1,2,'power array');
-    this.placePickup(1,1,'sensor');
-    this.placePickup(1,1,'sensor');
+    this.placePickup(4,3,'sensor');
+    this.placePickup(1,5,'sensor');
 
   },
   placePickup(x,y,pickup) {
@@ -122,7 +152,7 @@ var GS = {
     overLoc:new Phaser.Point(),
     zoneLoc:new Phaser.Point(game.rnd.integerInRange(100,700),360)
   };
-  GS.heldItem = pu;
+  // GS.heldItem = pu;
 
     // m.pickups.push(pu);
 
@@ -138,6 +168,9 @@ var GS = {
 
     }
     return false;
+  },
+  changeAirLevel(newLevel) {
+    game.add.tween(this).to({air: newLevel}, 300, Phaser.Easing.Linear.None, true);
   }
 
 

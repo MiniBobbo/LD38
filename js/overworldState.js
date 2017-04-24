@@ -8,6 +8,8 @@ var OverworldState = {
   spaceKey:null,
   startTime:null,
   goalText:null,
+  statsText:null,
+  timer:null,
 
   preload: function() {
 
@@ -34,6 +36,7 @@ var OverworldState = {
         t.animations.add('solar',['ow_solar']);
         t.animations.add('sensorspot', ['ow_sensorspot']);
         t.animations.add('sensor', ['ow_sensor']);
+        t.animations.add('signal', ['ow_signal']);
 
 
         if(!t.stats.explored) {
@@ -42,7 +45,7 @@ var OverworldState = {
           switch (t.stats.type) {
             case 'solar':
             // debugger;
-              if(t.stats.equip=='none') {
+              if(!t.stats.equip) {
                 t.animations.play('solarspot');
               } else {
                 t.animations.play('solar');
@@ -56,6 +59,13 @@ var OverworldState = {
               t.animations.play('sensor');
             }
 
+              break;
+            case 'signal':
+            if(!t.stats.equip) {
+              t.animations.play('empty');
+            } else {
+              t.animations.play('signal');
+            }
               break;
             default:
             t.animations.play(t.stats.type);
@@ -94,11 +104,16 @@ var OverworldState = {
 
   },
   update:function() {
+    this.statsText.text = 'Air: ' + Math.floor(GS.air);
   },
   movePlayerSprite:function() {
     // debugger;
     // game.add.tween(this.dialogBoxes).to( { alpha: 1 }, );
     game.add.tween(this.player).to({x: GS.playerLoc.x * 100 + 18, y: GS.playerLoc.y * 100 + 18}, 500, Phaser.Easing.Quadratic.InOut, true).onComplete.add(OverworldState.exploreZone);
+    GS.changeAirLevel(GS.air - game.rnd.integerInRange(3,8));
+    if(GS.air <= 0) {
+      OverworldState.enterZone();
+    }
     },
   exploreZone:function() {
     if(!GS.overworld[GS.playerLoc.x][GS.playerLoc.y].explored) {
@@ -155,5 +170,6 @@ var OverworldState = {
       }
     }
 
+    this.statsText = game.add.text(620, 400, "Air: " + GS.air, style);
   }
 };

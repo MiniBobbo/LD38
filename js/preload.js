@@ -6,8 +6,8 @@ var PreloadState = {
     game.load.atlas('bgs', 'assets/bgs.png', 'assets/bgs.json');
   },
   create:function() {
-    game.state.start('OverworldState');
     GS.init();
+    game.state.start('OverworldState');
   },
   update:function() {
 
